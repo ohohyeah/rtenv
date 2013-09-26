@@ -290,6 +290,7 @@ void rs232_xmit_msg_task()
 	}
 }
 
+/*send messages to UART with delay */
 void send_msg(char *str)
 {
 	int fdout = mq_open("/tmp/mqueue/out", 0);
@@ -299,20 +300,26 @@ void send_msg(char *str)
 		/* Post the message.  Keep on trying until it is successful. */
 		write(fdout, str, msg_len);
 		/* Wait. */
-		sleep(10);
+		sleep(5);
 	
 }
 
 
-
+/*command set*/
 void commands(char *str )
 {	
 	int fdout = mq_open("/tmp/mqueue/out", 0);
-	if (strcmp (str, "w") ==0 )
+	
+	if (strcmp (str, "help") ==0 )
 	{
-		int len =  strlen(str);
-		//str = "Hellow world\n";
-		send_msg("Hello\n\r");
+		send_msg("======== help menu ========\n\r");
+		send_msg("help : show all of commands.\n\r");
+		send_msg("echo : repeat the input text.\n\r");
+		send_msg("ps   : show process id.\n\r");
+	}
+	else if (strcmp (str, "hello") ==0 )
+	{
+		send_msg("Hello World !\n\r");
 	}	
 	
 
@@ -331,17 +338,17 @@ void serial_readwrite_task()
 	fdin = open("/dev/tty0/in", 0);
 
 	/* Prepare the response message to be queued. */
-	//memcpy(str, "Got:", 4);
-	//write(fdout, "yo:", 3);
+
 
 	while (1) {
 		curr_char = 0;
 		done = 0;
+		send_msg("yo:");
 		do {
 			/* Receive a byte from the RS232 port (this call will
 			 * block). */
 			read(fdin, &ch, 1);
-			//write(fdout, &ch, curr_char);
+
 			/* If the byte is an end-of-line type character, then
 			 * finish the string and inidcate we are done.
 			 */
@@ -350,17 +357,14 @@ void serial_readwrite_task()
 				if(curr_char == 0)
 					send_msg("\n\r");
 				else {
-
 					send_msg(str);
 					send_msg("\n\r");
 					commands(str);	
 				}
-					
-				
+
 				done = -1;
 				/* Otherwise, add the character to the
 				 * response string. */
-
 			}
 			else {
 				str[curr_char++] = ch;
