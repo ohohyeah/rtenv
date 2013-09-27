@@ -321,9 +321,6 @@ void commands(char *str)
 		i++;
 	}
 	action[i++] = '\0'; 
-
-
-
 	
 	if (strcmp (str, "help") ==0 )
 	{/*
@@ -336,8 +333,7 @@ void commands(char *str)
 	else if (strcmp (str, "hello") ==0 )
 	{
 		write(fdout, "Hello World !",15 );
-		write(fdout, newline, 3);
-		sleep(10);	
+		write(fdout, newline, 3);	
 		//send_msg("Hello World !\n\r\0");
 	}
 	else if (strcmp (comm, "echo") ==0 )
