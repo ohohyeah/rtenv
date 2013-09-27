@@ -111,6 +111,7 @@ struct task_control_block {
 int fdout, fdin;
 char newline[3] = {'\n','\r','\0'};
 struct task_control_block tasks[TASK_LIMIT];
+size_t task_count = 0;
 
 
 /* Stack struct of user thread, see "Exception entry and return" */
@@ -323,7 +324,11 @@ void rs232_xmit_msg_task()
 }
 
 
-
+void send_msg(char *str)
+{
+	int len = strlen(str)+2;
+	write(fdout, str, len);
+}
 
 /*command set*/
 void commands(char *str)
@@ -351,12 +356,12 @@ void commands(char *str)
 	
 	if (strcmp (comm, "help") ==0 )
 	{
-/*
+
 		send_msg("======== help menu ========\n\r");
 		send_msg("help : show all of commands.\n\r");
 		send_msg("echo : repeat the input text.\n\r");
 		send_msg("ps   : show process state.\n\r");
-*/
+
 	
 	}
 	else if (strcmp (comm, "hello") ==0 )
@@ -371,6 +376,24 @@ void commands(char *str)
 		write(fdout, action, 50);
 		write(fdout, newline, 3);	
 		
+	}else if (strcmp (comm, "ps") ==0 )
+	{
+		char pid[5];
+		int count = 0;
+		send_msg("Pid  Status  Priority");
+		while(count < task_count)
+		{
+			//write(fdout, "Pid  Status  Priority", 7);
+			
+			itoa(tasks[count].pid,pid);
+			write(fdout, pid , 5);
+			write(fdout, newline, 3);			
+			count++;
+		}
+/*
+		write(fdout, action, 50);
+		write(fdout, newline, 3);	
+	*/	
 	}	
 	
 
@@ -740,7 +763,7 @@ int main()
 	struct pipe_ringbuffer pipes[PIPE_LIMIT];
 	struct task_control_block *ready_list[PRIORITY_LIMIT + 1];  /* [0 ... 39] */
 	struct task_control_block *wait_list = NULL;
-	size_t task_count = 0;
+	//size_t task_count = 0;
 	size_t current_task = 0;
 	size_t i;
 	struct task_control_block *task;
