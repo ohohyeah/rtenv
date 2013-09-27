@@ -378,22 +378,26 @@ void commands(char *str)
 		
 	}else if (strcmp (comm, "ps") ==0 )
 	{
-		char pid[5];
+		char p_pid[5], p_status[5], p_priority[5];
 		int count = 0;
-		send_msg("Pid  Status  Priority");
+		send_msg("Pid  Status  Priority\n\r");
+		send_msg("---------------------\n\r");		
 		while(count < task_count)
 		{
 			//write(fdout, "Pid  Status  Priority", 7);
 			
-			itoa(tasks[count].pid,pid);
-			write(fdout, pid , 5);
-			write(fdout, newline, 3);			
+			itoa(tasks[count].pid,p_pid);
+			itoa(tasks[count].status,p_status);
+			itoa(tasks[count].priority,p_priority);
+			send_msg(p_pid);
+			send_msg("    ");
+			send_msg(p_status);
+			send_msg("       ");
+			send_msg(p_priority);
+			send_msg(newline);						
 			count++;
 		}
-/*
-		write(fdout, action, 50);
-		write(fdout, newline, 3);	
-	*/	
+	
 	}	
 	
 
