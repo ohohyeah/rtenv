@@ -71,6 +71,11 @@ void puts(char *s)
 #define S_IMSGQ 2
 
 #define O_CREAT 4
+/*Global Variable*/
+int fdout, fdin;
+char newline[3] = {'\n','\r','\0'};
+
+
 
 /* Stack struct of user thread, see "Exception entry and return" */
 struct user_thread_stack {
@@ -290,53 +295,58 @@ void rs232_xmit_msg_task()
 	}
 }
 
-/*send messages to UART with delay */
-void send_msg(char *str)
-{
-	int fdout = mq_open("/tmp/mqueue/out", 0);
-	
-	int msg_len = strlen(str);
-	
-		/* Post the message.  Keep on trying until it is successful. */
-		write(fdout, str, msg_len);
-		/* Wait. */
-		sleep(5);
-	
-}
+
 
 
 /*command set*/
 void commands(char *str)
 {	
-	int fdout = open("/tmp/mqueue/out", 0);
-	int count= 0;
+	int count= 0, i= 0,j=0;
 	int len = strlen(str);
-/*
-	char parm[];
-	while (count < len)	
+	char comm[10] = {'\0'}, action[50] ={'\0'};
+	
+	/*parse command*/
+	
+	while((str[i] != ' ') && (str[i] != '\0'))
 	{
-		if (str[count] == 32){
-		puts(str[count-1]);
-		
-		}
-		count++;
+		comm[i] = str[i];
+		i++;
+
+	}		
+	comm[i++] = '\0';
+	while(str[i] != '\0')
+	{
+		action[j] = str[i];
+		j++;
+		i++;
 	}
-*/
+	action[i++] = '\0'; 
+
+
+
+	
 	if (strcmp (str, "help") ==0 )
-	{
+	{/*
 		send_msg("======== help menu ========\n\r");
 		send_msg("help : show all of commands.\n\r");
 		send_msg("echo : repeat the input text.\n\r");
 		send_msg("ps   : show process state.\n\r");
+	*/
 	}
 	else if (strcmp (str, "hello") ==0 )
 	{
-		send_msg("Hello World !\n\r");
+		write(fdout, "Hello World !",15 );
+		write(fdout, newline, 3);
+		sleep(10);	
+		//send_msg("Hello World !\n\r\0");
 	}
-	else if (strcmp (str, "echo") ==0 )
+	else if (strcmp (comm, "echo") ==0 )
 	{
-		send_msg("ecgo:");
-		send_msg(str);
+	
+		write(fdout, "ECHO:", 7);
+		write(fdout, action, 50);
+		write(fdout, newline, 3);	
+		
 	}	
 	
 
@@ -345,9 +355,9 @@ void commands(char *str)
 
 void serial_readwrite_task()
 {
-	int fdout, fdin;
+	//int fdout, fdin;
 	char str[100];
-	char ch[2];
+	char ch[2],name[3]={'y','o',':'} ;
 	int curr_char;
 	int done;
 
@@ -358,7 +368,7 @@ void serial_readwrite_task()
 	//memcpy(str, "Got:", 4);
 
 	while (1) {
-		write(fdout, "yo:", 3);
+		write(fdout, name, 4);
 		curr_char = 0;
 		done = 0;
 		do {
@@ -372,7 +382,7 @@ void serial_readwrite_task()
 
 			if (curr_char >= 98 || (*ch == '\r') || (*ch == '\n')) {
 				str[curr_char] = '\0';
-				write(fdout, "\n", 2);
+				write(fdout, newline, 3);
 				done = -1;
 				/* Otherwise, add the character to the
 				 * response string. */
@@ -387,8 +397,9 @@ void serial_readwrite_task()
 		/* Once we are done building the response string, queue the
 		 * response to be sent to the RS232 port.
 		 */
-//		write(fdout, str, curr_char+1+1);
-		write(fdout, "\r", 2);
+		//write(fdout, "\r", 2);
+		commands(str);
+		
 	}
 }
 
