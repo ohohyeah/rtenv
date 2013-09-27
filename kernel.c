@@ -49,6 +49,42 @@ void puts(char *s)
 	}
 }
 
+
+void itoa(int n, char *buf)
+{
+	if (n == 0)
+		*(buf++) = '0';
+	else {
+		int i = 10000;
+		if (n < 0) 
+		{
+			*(buf++) = '-';
+			n = -n;
+		}
+
+		while (i != 0) 
+		{
+			int j = n / i;
+			if (j != 0) {
+				*(buf++) = '0'+(j%10);;
+			}
+			i/=10;
+		}
+	}
+	*buf = '\0';
+}
+
+/* Task Control Block */
+struct task_control_block {
+    struct user_thread_stack *stack;
+    int pid;
+    int status;
+    int priority;
+    struct task_control_block **prev;
+    struct task_control_block  *next;
+};
+
+
 #define STACK_SIZE 512 /* Size of task stacks in words */
 #define TASK_LIMIT 8  /* Max number of tasks we can handle */
 #define PIPE_BUF   64 /* Size of largest atomic pipe message */
@@ -74,7 +110,7 @@ void puts(char *s)
 /*Global Variable*/
 int fdout, fdin;
 char newline[3] = {'\n','\r','\0'};
-
+struct task_control_block tasks[TASK_LIMIT];
 
 
 /* Stack struct of user thread, see "Exception entry and return" */
@@ -100,15 +136,6 @@ struct user_thread_stack {
 	unsigned int stack[STACK_SIZE - 18];
 };
 
-/* Task Control Block */
-struct task_control_block {
-    struct user_thread_stack *stack;
-    int pid;
-    int status;
-    int priority;
-    struct task_control_block **prev;
-    struct task_control_block  *next;
-};
 
 /* 
  * pathserver assumes that all files are FIFOs that were registered
@@ -322,19 +349,20 @@ void commands(char *str)
 	}
 	action[i++] = '\0'; 
 	
-	if (strcmp (str, "help") ==0 )
-	{/*
+	if (strcmp (comm, "help") ==0 )
+	{
+/*
 		send_msg("======== help menu ========\n\r");
 		send_msg("help : show all of commands.\n\r");
 		send_msg("echo : repeat the input text.\n\r");
 		send_msg("ps   : show process state.\n\r");
-	*/
+*/
+	
 	}
-	else if (strcmp (str, "hello") ==0 )
+	else if (strcmp (comm, "hello") ==0 )
 	{
 		write(fdout, "Hello World !",15 );
 		write(fdout, newline, 3);	
-		//send_msg("Hello World !\n\r\0");
 	}
 	else if (strcmp (comm, "echo") ==0 )
 	{
@@ -708,7 +736,7 @@ _mknod(struct pipe_ringbuffer *pipe, int dev)
 int main()
 {
 	unsigned int stacks[TASK_LIMIT][STACK_SIZE];
-	struct task_control_block tasks[TASK_LIMIT];
+	//struct task_control_block tasks[TASK_LIMIT];
 	struct pipe_ringbuffer pipes[PIPE_LIMIT];
 	struct task_control_block *ready_list[PRIORITY_LIMIT + 1];  /* [0 ... 39] */
 	struct task_control_block *wait_list = NULL;
